@@ -18,9 +18,13 @@ function DisplayCanvas (video) {
       data = display.getImageData(0,0,640,480);
       idata = ImageProcessing(data);
       display.putImageData(idata,0,0);
+      DisplayOverlay();
     }, delay);
   }
 
+function DisplayOverlay () {
+  display.circle([200,200], 30);
+}
 function ImageProcessing (idata) {
 
   //var idata = display.getImageData(0,0,width,height);
