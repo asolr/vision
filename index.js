@@ -1,26 +1,48 @@
 // load javascript after the page is fully loaded
 window.addEventListener('load', function() {main();}, false);
 
-var canvas = Object;
-var ctx = Object;
+var display = Object;
 
-function VideoCamera(video) {
+function DisplayVideo(video) {
   video.onloadedmetadata = function(e) {
     video.play();
   }
 }
 
-function ImageProcessing (video) {
-  var delay = 1000; // ms
+function DisplayCanvas (video) {
+  var delay = 0; // ms
   timer = setInterval(
     function () {
-      ctx.drawImage(video, 0, 0, 640, 480);
+      // display is a canvas context
+      display.drawImage(video, 0, 0, 640, 480);
+      data = display.getImageData(0,0,640,480);
+      idata = ImageProcessing(data);
+      display.putImageData(idata,0,0);
     }, delay);
   }
 
+function ImageProcessing (idata) {
+
+  //var idata = display.getImageData(0,0,width,height);
+  var data = idata.data;
+    // Loop through the pixels, turning them grayscale
+    for(var i = 0; i < data.length; i+=4) {
+        var r = data[i];
+        var g = data[i+1];
+        var b = data[i+2];
+        var brightness = (3*r+4*g+b)>>>3;
+        data[i] = brightness;
+        data[i+1] = brightness;
+        data[i+2] = brightness;
+    }
+    idata.data = data;
+    return idata;
+    // Draw the pixels onto the visible canvas
+    //display.putImageData(idata,0,0);
+}
+
 function setup() {
-  canvas = document.getElementById("canvas");
-  ctx = canvas.getContext('2d');
+  display = new Canvas(document.getElementById("canvas"));
 
   // chrome requires special configuration see http://www.html5rocks.com/en/tutorials/getusermedia/intro/
   navigator.getUserMedia = navigator.getUserMedia ||
@@ -37,8 +59,8 @@ function main() {
       function(stream) {
         var video = document.querySelector('video');
         video.src = window.URL.createObjectURL(stream);
-        VideoCamera(video);
-        ImageProcessing(video);
+        DisplayVideo(video);
+        DisplayCanvas(video);
       },
       function(err) {
         console.log("The following error occured: " + err.name);
