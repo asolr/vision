@@ -23,7 +23,8 @@ function DisplayCanvas (video) {
   }
 
 function DisplayOverlay () {
-  display.circle([200,200], 30);
+  display.circle([Math.random()*640,Math.random()*480], 30);
+  display.square([Math.random()*640,Math.random()*480], 30);
 }
 function ImageProcessing (idata) {
 
@@ -35,8 +36,8 @@ function ImageProcessing (idata) {
         var g = data[i+1];
         var b = data[i+2];
         var brightness = (3*r+4*g+b)>>>3;
-        data[i] = brightness;
-        data[i+1] = brightness;
+        data[i] = 0;//brightness;
+        data[i+1] = 0;//brightness;
         data[i+2] = brightness;
     }
     idata.data = data;
