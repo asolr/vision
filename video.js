@@ -1,15 +1,24 @@
 var videoc = Object;
 var audioc = Object;
 
-navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-window.URL = window.URL || window.webkitURL || window.msURL || window.mozURL;
-
 // Setup the Video Stream works with Firefox and Chrome ONLY
-function Stream() {
+window.addEventListener('load', function() {Video();}, false);
+
+// Setup the Audio and Video
+function Video()
+{
+
+  navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+  window.URL = window.URL || window.webkitURL || window.msURL || window.mozURL;
+
+  videoc = new Canvas(document.getElementById("videocanvas"));
+  audioc = new Canvas(document.getElementById("audiocanvas"));
+
   var constraints = {video: true, audio: true};
   navigator.getUserMedia(constraints, (function(stream)
   {
     PlayVideo(stream);
+    //PlayAudio(stream);
   }),
   (function(err) {
     console.log("The following error occured: " + err.name);
@@ -17,7 +26,8 @@ function Stream() {
 }
 
 // play the <video>
-function PlayVideo(stream) {
+function PlayVideo(stream)
+{
   video = document.querySelector('video');
   video.src = window.URL.createObjectURL(stream);
   video.onloadedmetadata = function(e) {
