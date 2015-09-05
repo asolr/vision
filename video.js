@@ -50,6 +50,8 @@ function DSP(image) {
   //image = DSP.brightness(image, 100);
   //image = DSP.threshold(image, 100);
   image = DSP.sobel(image);
+  //image = DSP.laplace(image);
+  //image = DSP.sharpen(image);
   return image;
 }
 
@@ -96,6 +98,7 @@ DSP.brightness = function(image, adjustment) {
   return image;
 };
 
+// TODO: http://www.html5rocks.com/en/tutorials/canvas/imagefilters/
 DSP.convolute = function(image, weights, opaque)
 {
   var side = Math.round(Math.sqrt(weights.length));
@@ -141,7 +144,19 @@ DSP.convolute = function(image, weights, opaque)
   return output;
 };
 
-DSP.sobel = function(image) {
+DSP.sharpen = function(image)
+{
+  DSP.convolute(image,[ 0, -1,  0, -1,  5, -1, 0, -1,  0]);
+}
+
+DSP.laplace = function(image)
+{
+  DSP.convolute(image,[0,1,0,1,-4,1,0,1,0]);
+}
+
+// TODO: http://www.html5rocks.com/en/tutorials/canvas/imagefilters/
+DSP.sobel = function(image)
+{
   image = DSP.grayscale(image);
   var vertical = DSP.convolute(image, [-1,-2,-1, 0, 0, 0, 1, 2, 1]);
   var horizontal = DSP.convolute(image, [-1,0,1,-2,0,2,-1,0,1]);
