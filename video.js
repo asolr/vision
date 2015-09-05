@@ -37,7 +37,7 @@ function CanvasVideo(video) {
     var image = videoc.getImageData(0,0,video.width,video.height);
     image = DSP(image);
     videoc.putImageData(image,0,0);
-    CanvasOverlay();
+    //CanvasOverlay();
   }, delay);
 }
 
@@ -47,17 +47,20 @@ function CanvasOverlay () {
 }
 
 function DSP(image) {
-  return DSP.threshold(image, 100);
+  //image = DSP.brightness(image, 100);
+  //image = DSP.threshold(image, 100);
+  image = DSP.sobel(image);
+  return image;
 }
 
-// Loop through the pixels, turning them grayscale
+// Loop through the image, turning them grayscale
 // The human eye is bad at seeing red and blue, so we de-emphasize them.
 //    var v = 0.2126*r + 0.7152*g + 0.0722*b;
 //    d[i] = d[i+1] = d[i+2] = v
 DSP.grayscale = function(image)
 {
   var d = image.data;
-  for(var i = 0; i < data.length; i+=4) {
+  for(var i = 0; i < d.length; i+=4) {
     var r = d[i];
     var g = d[i+1];
     var b = d[i+2];
@@ -82,3 +85,74 @@ DSP.threshold = function(image, threshold)
   }
   return image;
 };
+
+DSP.brightness = function(image, adjustment) {
+  var d = image.data;
+  for (var i=0; i<d.length; i+=4) {
+    d[i] += adjustment;
+    d[i+1] += adjustment;
+    d[i+2] += adjustment;
+  }
+  return image;
+};
+
+DSP.convolute = function(image, weights, opaque)
+{
+  var side = Math.round(Math.sqrt(weights.length));
+  var halfSide = Math.floor(side/2);
+
+  var src = image.data;
+  var sw = image.width;
+  var sh = image.height;
+
+  var w = sw;
+  var h = sh;
+  var output = {
+    width: w, height: h, data: new Float32Array(w*h*4)
+  };
+  var dst = output.data;
+
+  var alphaFac = opaque ? 1 : 0;
+
+  for (var y=0; y<h; y++) {
+    for (var x=0; x<w; x++) {
+      var sy = y;
+      var sx = x;
+      var dstOff = (y*w+x)*4;
+      var r=0, g=0, b=0, a=0;
+      for (var cy=0; cy<side; cy++) {
+        for (var cx=0; cx<side; cx++) {
+          var scy = Math.min(sh-1, Math.max(0, sy + cy - halfSide));
+          var scx = Math.min(sw-1, Math.max(0, sx + cx - halfSide));
+          var srcOff = (scy*sw+scx)*4;
+          var wt = weights[cy*side+cx];
+          r += src[srcOff] * wt;
+          g += src[srcOff+1] * wt;
+          b += src[srcOff+2] * wt;
+          a += src[srcOff+3] * wt;
+        }
+      }
+      dst[dstOff] = r;
+      dst[dstOff+1] = g;
+      dst[dstOff+2] = b;
+      dst[dstOff+3] = a + alphaFac*(255-a);
+    }
+  }
+  return output;
+};
+
+DSP.sobel = function(image) {
+  image = DSP.grayscale(image);
+  var vertical = DSP.convolute(image, [-1,-2,-1, 0, 0, 0, 1, 2, 1]);
+  var horizontal = DSP.convolute(image, [-1,0,1,-2,0,2,-1,0,1]);
+  var id = videoc.context.createImageData(vertical.width, vertical.height);
+  for (var i=0; i<id.data.length; i+=4) {
+    var v = Math.abs(vertical.data[i]);
+    id.data[i] = v;
+    var h = Math.abs(horizontal.data[i]);
+    id.data[i+1] = h
+    id.data[i+2] = (v+h)/4;
+    id.data[i+3] = 255;
+  }
+  return id;
+}
