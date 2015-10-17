@@ -59,9 +59,35 @@ function CanvasOverlay () {
 function DSP(image) {
   //image = DSP.brightness(image, 100);
   //image = DSP.threshold(image, 100);
-  image = DSP.sobel(image);
+  //image = DSP.sobel(image);
   //image = DSP.laplace(image);
   //image = DSP.sharpen(image);
+  image = DSP.radiation(image);
+  return image;
+}
+
+var past;
+var realpast;
+DSP.radiation = function(image) {
+  // ionizing radiation has a smaller wavelenth
+  // ultra-violet light is maybe more dangerious... blue or violet in color when looking at the visable spectrum.
+  past == null ? past = image : past = past;
+  realpast == null ? realpast = past : realpast = realpast;
+  var d = image.data;
+  for(var i = 0; i < d.length; i+=4) {
+    var r = d[i];
+    var g = d[i+1];
+    var b = d[i+2];
+    //var brightness = (3*r+4*g+b)>>>3;
+    gamma = Math.abs(r - past.data[i]) + Math.abs(g - past.data[i+1]) + Math.abs(b - past.data[i+2]);
+    gamma += (Math.abs(past.data[i] - realpast.data[i]) + Math.abs(past.data[i+1] - realpast.data[i+1]) + Math.abs(past.data[i+2] - realpast.data[i+2]));
+    d[i] = gamma;
+    d[i+1] = gamma;
+    d[i+2] = gamma;
+  }
+  realpast = past;
+  past = image;
+  image.data = d;
   return image;
 }
 
